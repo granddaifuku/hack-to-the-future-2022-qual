@@ -29,12 +29,14 @@ vector<int> u, v;
 // Parameters
 // ---------------------------------------------------------------------------
 
+int reset_days = 50;  // メンバーの評価をリセットする期間
+
 // 実行可能なタスク
 // 要素: pair<タスクNo, max(d_{タスクNo})>
-// max(d_{タスクNo})が大きい順に取り出す
+// max(d_{タスクNo})が小さい順に取り出す
 auto cmp_tasks = [](const pair<int, int>& l, const pair<int, int>& r) {
   if (l.second != r.second) {
-    return l.second > r.second;
+    return l.second < r.second;
   }
   return l.first < r.first;
 };
@@ -70,6 +72,14 @@ vector<vector<int>> relations;
 // ---------------------------------------------------------------------------
 // Utility Functions
 // ---------------------------------------------------------------------------
+
+// 評価をリセットする
+void clear_eval() {
+  rep(i, M) {
+    weight[i].first = 0LL;
+    weight[i].second = 0;
+  }
+}
 
 // メンバーと担当タスクを選ぶ
 void choose_tasks(vector<int>& a, vector<int>& b, const int day) {
@@ -124,6 +134,10 @@ void finish_day(const vector<int>& f, const int day) {
     double ave =
         (double)weight[assignee].first / (double)weight[assignee].second;
     available.push({assignee, ave});
+  }
+
+  if (day != 0 && day % reset_days == 0) {
+    clear_eval();
   }
 
   // 実行可能なタスクの追加
