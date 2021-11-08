@@ -31,10 +31,10 @@ vector<int> u, v;
 
 // 実行可能なタスク
 // 要素: pair<タスクNo, max(d_{タスクNo})>
-// max(d_{タスクNo})が小さい順に取り出す
+// max(d_{タスクNo})が大きい順に取り出す
 auto cmp_tasks = [](const pair<int, int>& l, const pair<int, int>& r) {
   if (l.second != r.second) {
-    return l.second < r.second;
+    return l.second > r.second;
   }
   return l.first < r.first;
 };
