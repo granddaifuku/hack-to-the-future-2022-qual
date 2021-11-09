@@ -29,7 +29,7 @@ vector<int> u, v;
 // Parameters
 // ---------------------------------------------------------------------------
 
-int reset_days = 50;  // メンバーの評価をリセットする期間
+int reset_days = 500;  // メンバーの評価をリセットする期間
 
 // 実行可能なタスク
 // 要素: tuple<タスクNo, 依存されているタスク数, max(d_{タスクNo})>
@@ -141,6 +141,10 @@ void finish_day(const vector<int>& f, const int day) {
     double ave =
         (double)weight[assignee].first / (double)weight[assignee].second;
     available.push({assignee, ave});
+  }
+
+  if (day != 0 && day % reset_days == 0) {
+	clear_eval();
   }
 
   // 実行可能なタスクの追加
