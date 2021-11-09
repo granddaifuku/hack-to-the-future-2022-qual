@@ -32,15 +32,20 @@ vector<int> u, v;
 int reset_days = 50;  // メンバーの評価をリセットする期間
 
 // 実行可能なタスク
-// 要素: pair<タスクNo, max(d_{タスクNo})>
-// max(d_{タスクNo})が小さい順に取り出す
-auto cmp_tasks = [](const pair<int, int>& l, const pair<int, int>& r) {
-  if (l.second != r.second) {
-    return l.second < r.second;
+// 要素: tuple<タスクNo, 依存されているタスク数, max(d_{タスクNo})>
+auto cmp_tasks = [](const tuple<int, int, int>& l,
+                    const tuple<int, int, int>& r) {
+  if (get<1>(l) != get<1>(r)) {
+    // 依存されているタスク数が多い順に取り出す
+    return get<1>(l) > get<1>(r);
+  } else if (get<2>(l) != get<2>(r)) {
+    // max(d_{i}) が大きいものから順に取り出す
+    return get<2>(l) > get<2>(r);
   }
-  return l.first < r.first;
+  return get<0>(l) < get<0>(r);
 };
-priority_queue<pair<int, int>, vector<pair<int, int>>, decltype(cmp_tasks)>
+priority_queue<tuple<int, int, int>, vector<tuple<int, int, int>>,
+               decltype(cmp_tasks)>
     tasks(cmp_tasks);
 
 // 空いているチームメンバーを管理
@@ -66,8 +71,10 @@ vector<int> is_finished;
 // 実行可能タスクキューにいるかどうか
 vector<bool> is_inQueue;
 
-// 依存関係
+// タスクiが依存しているタスク一覧
 vector<vector<int>> relations;
+// タスクiに依存しているタスクの数
+vector<int> num_dependent;
 
 // ---------------------------------------------------------------------------
 // Utility Functions
@@ -87,7 +94,7 @@ void choose_tasks(vector<int>& a, vector<int>& b, const int day) {
     int member = available.top().first;
     available.pop();
     a.push_back(member);
-    int task = tasks.top().first;
+    int task = get<0>(tasks.top());
     tasks.pop();
     b.push_back(task);
     // 取り組んでいるにチェック
@@ -113,7 +120,7 @@ void add_tasks() {
     }
     // 全ての依存タスクが終了していれば新たに追加
     if (solved) {
-      tasks.push({i, d[i][K]});
+      tasks.push({i, num_dependent[i], d[i][K]});
       is_inQueue[i] = true;
     }
   }
@@ -134,10 +141,6 @@ void finish_day(const vector<int>& f, const int day) {
     double ave =
         (double)weight[assignee].first / (double)weight[assignee].second;
     available.push({assignee, ave});
-  }
-
-  if (day != 0 && day % reset_days == 0) {
-    clear_eval();
   }
 
   // 実行可能なタスクの追加
@@ -193,6 +196,7 @@ int main() {
   working.resize(M, -1);
   weight.resize(M, {0LL, 0});
   relations.resize(N);
+  num_dependent.resize(N);
 
   // Read Input
   rep(i, N) {
@@ -205,13 +209,15 @@ int main() {
   }
   rep(i, R) {
     cin >> u[i] >> v[i];
-    relations[v[i] - 1].push_back(u[i] - 1);
+    u[i]--, v[i]--;
+    relations[v[i]].push_back(u[i]);
+    num_dependent[u[i]]++;
   }
   // 初期段階で実行可能なタスク一蘭
   rep(i, N) {
     // 依存するタスクが何もない
     if ((int)relations[i].size() == 0) {
-      tasks.push({i, d[i][K]});
+      tasks.push({i, num_dependent[i], d[i][K]});
       is_inQueue[i] = true;
     }
   }
