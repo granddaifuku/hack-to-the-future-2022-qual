@@ -32,16 +32,17 @@ vector<int> u, v;
 int reset_days = 500;  // メンバーの評価をリセットする期間
 
 // 実行可能なタスク
-// 要素: tuple<タスクNo, 依存されているタスク数, max(d_{タスクNo})>
+// 要素: tuple<タスクNo, max(d_{タスクNo}), 依存されているタスク数>
 auto cmp_tasks = [](const tuple<int, int, int>& l,
                     const tuple<int, int, int>& r) {
   if (get<1>(l) != get<1>(r)) {
-    // 依存されているタスク数 * max(d_{i}) が多い順に取り出す
-    return get<1>(l) > get<1>(r);
+    // max(d_{i}) が小さい順に取り出す
+    return get<1>(l) < get<1>(r);
   } else if (get<2>(l) != get<2>(r)) {
-    // max(d_{i}) が大きいものから順に取り出す
+    // 依存されているタスク数が多い順に取り出す
     return get<2>(l) > get<2>(r);
   }
+  // タスク番号が小さいものから取り出す
   return get<0>(l) < get<0>(r);
 };
 priority_queue<tuple<int, int, int>, vector<tuple<int, int, int>>,
@@ -61,6 +62,7 @@ priority_queue<pair<int, double>, vector<pair<int, double>>,
 
 vector<int> working;  // 各メンバーが取り組んでいるタスクNo
 vector<pair<ll, int>> weight;  // メンバーの重み: <重み, タスクの実行回数>
+vector<vector<int>> ability;  // メンバーの能力
 
 // 各タスクの管理
 // 終わっている: -1
@@ -79,6 +81,22 @@ vector<int> num_dependent;
 // ---------------------------------------------------------------------------
 // Utility Functions
 // ---------------------------------------------------------------------------
+
+// メンバーの評価を行う
+void estimate(const int member_id, const int task_id, const int duration) {
+  int w = 0;
+  int index = 0;
+  rep(i, K) {
+    if (w < d[task_id][i] - ability[member_id][i]) {
+      w = d[task_id][i] - ability[member_id][i];
+      index = i;
+    }
+  }
+  if (duration == 1) {
+    ability[member_id][index] = w;
+  } else {
+  }
+}
 
 // 評価をリセットする
 void clear_eval() {
@@ -120,7 +138,7 @@ void add_tasks() {
     }
     // 全ての依存タスクが終了していれば新たに追加
     if (solved) {
-      tasks.push({i, d[i][K] * num_dependent[i], d[i][K]});
+      tasks.push({i, d[i][K], num_dependent[i]});
       is_inQueue[i] = true;
     }
   }
@@ -141,10 +159,6 @@ void finish_day(const vector<int>& f, const int day) {
     double ave =
         (double)weight[assignee].first / (double)weight[assignee].second;
     available.push({assignee, ave});
-  }
-
-  if (day != 0 && day % reset_days == 0) {
-    clear_eval();
   }
 
   // 実行可能なタスクの追加
@@ -195,10 +209,14 @@ int main() {
   d.resize(N, vector<int>(K + 1));  // K番目に max(d_i)
   u.resize(R);
   v.resize(R);
+
   is_finished.resize(N, -2);
   is_inQueue.resize(N, false);
+
   working.resize(M, -1);
   weight.resize(M, {0LL, 0});
+  ability.resize(M, vector<int>(K));
+
   relations.resize(N);
   num_dependent.resize(N);
 
@@ -221,7 +239,7 @@ int main() {
   rep(i, N) {
     // 依存するタスクが何もない
     if ((int)relations[i].size() == 0) {
-      tasks.push({i, d[i][K] * num_dependent[i], d[i][K]});
+      tasks.push({i, d[i][K], num_dependent[i]});
       is_inQueue[i] = true;
     }
   }

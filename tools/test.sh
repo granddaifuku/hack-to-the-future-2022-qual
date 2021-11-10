@@ -8,6 +8,9 @@ fi
 touch scores.txt
 
 # Build
+if [ -e ./a.out ]; then
+	rm ./a.out
+fi
 g++ ../main.cpp
 echo "Compile done"
 
