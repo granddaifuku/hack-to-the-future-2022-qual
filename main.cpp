@@ -36,7 +36,7 @@ int reset_days = 500;  // メンバーの評価をリセットする期間
 auto cmp_tasks = [](const tuple<int, int, int>& l,
                     const tuple<int, int, int>& r) {
   if (get<1>(l) != get<1>(r)) {
-    // 依存されているタスク数が多い順に取り出す
+    // 依存されているタスク数 * max(d_{i}) が多い順に取り出す
     return get<1>(l) > get<1>(r);
   } else if (get<2>(l) != get<2>(r)) {
     // max(d_{i}) が大きいものから順に取り出す
@@ -120,7 +120,7 @@ void add_tasks() {
     }
     // 全ての依存タスクが終了していれば新たに追加
     if (solved) {
-      tasks.push({i, num_dependent[i], d[i][K]});
+      tasks.push({i, d[i][K] * num_dependent[i], d[i][K]});
       is_inQueue[i] = true;
     }
   }
@@ -144,7 +144,7 @@ void finish_day(const vector<int>& f, const int day) {
   }
 
   if (day != 0 && day % reset_days == 0) {
-	clear_eval();
+    clear_eval();
   }
 
   // 実行可能なタスクの追加
@@ -221,7 +221,7 @@ int main() {
   rep(i, N) {
     // 依存するタスクが何もない
     if ((int)relations[i].size() == 0) {
-      tasks.push({i, num_dependent[i], d[i][K]});
+      tasks.push({i, d[i][K] * num_dependent[i], d[i][K]});
       is_inQueue[i] = true;
     }
   }
