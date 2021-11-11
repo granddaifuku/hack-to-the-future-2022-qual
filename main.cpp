@@ -141,7 +141,7 @@ void add_tasks() {
     }
     // 全ての依存タスクが終了していれば新たに追加
     if (solved) {
-      tasks.push({i, task_weight[i], num_dependent[i]});
+      tasks.push({i, task_weight[i] * num_dependent[i], num_dependent[i]});
       is_inQueue[i] = true;
     }
   }
@@ -244,7 +244,7 @@ int main() {
   rep(i, N) {
     // 依存するタスクが何もない
     if ((int)relations[i].size() == 0) {
-      tasks.push({i, task_weight[i], num_dependent[i]});
+      tasks.push({i, task_weight[i] * num_dependent[i], num_dependent[i]});
       is_inQueue[i] = true;
     }
   }
