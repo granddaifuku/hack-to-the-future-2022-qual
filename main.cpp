@@ -32,11 +32,11 @@ vector<int> u, v;
 int reset_days = 500;  // メンバーの評価をリセットする期間
 
 // 実行可能なタスク
-// 要素: tuple<タスクNo, max(d_{タスクNo}), 依存されているタスク数>
+// 要素: tuple<タスクNo, median(d_{タスクNo}), 依存されているタスク数>
 auto cmp_tasks = [](const tuple<int, int, int>& l,
                     const tuple<int, int, int>& r) {
   if (get<1>(l) != get<1>(r)) {
-    // max(d_{i}) が小さい順に取り出す
+    // median(d_{i}) が小さい順に取り出す
     return get<1>(l) < get<1>(r);
   } else if (get<2>(l) != get<2>(r)) {
     // 依存されているタスク数が多い順に取り出す
@@ -77,6 +77,8 @@ vector<bool> is_inQueue;
 vector<vector<int>> relations;
 // タスクiに依存しているタスクの数
 vector<int> num_dependent;
+// タスクの重み
+vector<int> task_weight;
 
 // ---------------------------------------------------------------------------
 // Utility Functions
@@ -138,7 +140,7 @@ void add_tasks() {
     }
     // 全ての依存タスクが終了していれば新たに追加
     if (solved) {
-      tasks.push({i, d[i][K], num_dependent[i]});
+      tasks.push({i, task_weight[i], num_dependent[i]});
       is_inQueue[i] = true;
     }
   }
@@ -206,7 +208,7 @@ int main() {
   cin >> N >> M >> K >> R;
 
   // Resize
-  d.resize(N, vector<int>(K + 1));  // K番目に max(d_i)
+  d.resize(N, vector<int>(K));
   u.resize(R);
   v.resize(R);
 
@@ -219,16 +221,19 @@ int main() {
 
   relations.resize(N);
   num_dependent.resize(N);
+  task_weight.resize(N);
 
   // Read Input
   rep(i, N) {
-    int maxi = -Inf;
+    vector<int> tmp(K);
     rep(j, K) {
       cin >> d[i][j];
-      maxi = max(maxi, d[i][j]);
+      tmp[j] = d[i][j];
     }
-    d[i][K] = maxi;
+    sort(tmp.begin(), tmp.end());
+    task_weight[i] = tmp[K / 2];
   }
+
   rep(i, R) {
     cin >> u[i] >> v[i];
     u[i]--, v[i]--;
@@ -239,7 +244,7 @@ int main() {
   rep(i, N) {
     // 依存するタスクが何もない
     if ((int)relations[i].size() == 0) {
-      tasks.push({i, d[i][K], num_dependent[i]});
+      tasks.push({i, task_weight[i], num_dependent[i]});
       is_inQueue[i] = true;
     }
   }
