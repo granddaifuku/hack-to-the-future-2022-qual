@@ -70,9 +70,6 @@
 **** Score
 	 1000 case: 1644924
 
-**** Memop
-	 
-
 *** Idea. 10
    実行可能タスクの重み：max(d_{i}) -> median(d_{i}) が大きい順
 
