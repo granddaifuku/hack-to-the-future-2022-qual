@@ -33,19 +33,20 @@ int reset_days = 500;  // メンバーの評価をリセットする期間
 
 // 実行可能なタスク
 // 要素: tuple<タスクNo, median(d_{タスクNo}), 依存されているタスク数>
-auto cmp_tasks = [](const tuple<int, int, int>& l,
-                    const tuple<int, int, int>& r) {
-  if (get<1>(l) != get<1>(r)) {
-    // median(d_{i}) が小さい順に取り出す
-    return get<1>(l) < get<1>(r);
-  } else if (get<2>(l) != get<2>(r)) {
-    // 依存されているタスク数が多い順に取り出す
-    return get<2>(l) > get<2>(r);
-  }
-  // タスク番号が小さいものから取り出す
-  return get<0>(l) < get<0>(r);
+auto cmp_tasks = [](const tuple<int, double, int>& l,
+                    const tuple<int, double, int>& r) {
+  return get<1>(l) < get<1>(r);
+  // if (get<1>(l) != get<1>(r)) {
+  // 	// median(d_{i}) が小さい順に取り出す
+  // 	return get<1>(l) < get<1>(r);
+  // } else if (get<2>(l) != get<2>(r)) {
+  // 	// 依存されているタスク数が多い順に取り出す
+  // 	return get<2>(l) > get<2>(r);
+  // }
+  // // タスク番号が小さいものから取り出す
+  // return get<0>(l) < get<0>(r);
 };
-priority_queue<tuple<int, int, int>, vector<tuple<int, int, int>>,
+priority_queue<tuple<int, double, int>, vector<tuple<int, double, int>>,
                decltype(cmp_tasks)>
     tasks(cmp_tasks);
 
@@ -61,7 +62,7 @@ priority_queue<pair<int, double>, vector<pair<int, double>>,
     available(cmp_members);
 
 vector<int> working;  // 各メンバーが取り組んでいるタスクNo
-vector<pair<ll, int>> weight;  // メンバーの重み: <重み, タスクの実行回数>
+vector<pair<double, int>> weight;  // メンバーの重み: <重み, タスクの実行回数>
 vector<vector<int>> ability;  // メンバーの能力
 
 // 各タスクの管理
@@ -78,7 +79,7 @@ vector<vector<int>> relations;
 // タスクiに依存しているタスクの数
 vector<int> num_dependent;
 // タスクの重み
-vector<int> task_weight;
+vector<double> task_weight;
 
 // ---------------------------------------------------------------------------
 // Utility Functions
@@ -152,14 +153,13 @@ void finish_day(const vector<int>& f, const int day) {
   rep(i, (int)f.size()) {
     int assignee = f[i] - 1;
     int task_no = working[assignee];
-    ll w = (ll)(day - is_finished[task_no] + 1) * d[task_no][K];
+    double w = (day - is_finished[task_no] + 1) * task_weight[task_no];
     is_finished[task_no] = -1;
     // 重みの更新
     weight[assignee].first += w;
     weight[assignee].second++;
     // 空いている人に追加
-    double ave =
-        (double)weight[assignee].first / (double)weight[assignee].second;
+    double ave = weight[assignee].first / (double)weight[assignee].second;
     available.push({assignee, ave});
   }
 
@@ -216,7 +216,7 @@ int main() {
   is_inQueue.resize(N, false);
 
   working.resize(M, -1);
-  weight.resize(M, {0LL, 0});
+  weight.resize(M, {0.0, 0});
   ability.resize(M, vector<int>(K));
 
   relations.resize(N);
@@ -225,13 +225,13 @@ int main() {
 
   // Read Input
   rep(i, N) {
-    vector<int> tmp(K);
+    double sum = 0.0;
     rep(j, K) {
       cin >> d[i][j];
-      tmp[j] = d[i][j];
+      sum += (double)d[i][j];
     }
-    sort(tmp.begin(), tmp.end());
-    task_weight[i] = tmp[K / 2];
+    sum /= (double)K;
+    task_weight[i] = sum;
   }
 
   rep(i, R) {
