@@ -120,8 +120,8 @@ fn exec(command: &str, args: &Vec<String>) {
             } else {
                 n as i64
             };
-            eprintln!("Score = {}", score);
-            write_score_to_file(score);
+            eprintln!("{}", score);
+            //			eprintln!("Score = {}", score);
             return;
         }
         write!(stdin, "{}", f.len()).unwrap_or_else(|_| err());
@@ -130,20 +130,6 @@ fn exec(command: &str, args: &Vec<String>) {
         }
         writeln!(stdin).unwrap_or_else(|_| err());
         stdin.flush().unwrap_or_else(|_| err());
-    }
-}
-
-fn write_score_to_file(score: i64) {
-    let mut file = match std::fs::OpenOptions::new()
-        .append(true)
-        .open("./scores.txt")
-    {
-        Err(err) => panic!("Could not open scores.txt: {}", err),
-        Ok(file) => file,
-    };
-    match writeln!(file, "{}", score) {
-        Err(err) => panic!("Could not write score: {}", err),
-        Ok(_) => (),
     }
 }
 
